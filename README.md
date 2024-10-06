@@ -80,3 +80,4 @@ TODO:
 - [ ] Add automatic reconnection mechanism
 - [ ] Add socket.io communication that does not rely on WebSocket, such as HTTP-based communication
 - [ ] Testing
+- [ ] Support multiple namespaces simultaneously
