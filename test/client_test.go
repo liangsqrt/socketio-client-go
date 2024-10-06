@@ -12,7 +12,7 @@ func TestClient(t *testing.T) {
 		Host:   "127.0.0.1",
 		Port:   8080,
 		Secure: false,
-		Query:  map[string]string{"token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzMwNTgwMDIxLCJpYXQiOjE3Mjc5ODgwMjEsImp0aSI6IjU3OGE3NDg1YmRmZjRkYjliNDY1ZjgwNjA1YTAxMTM0IiwidXNlcl9pZCI6Mn0.VvQiyh4fYdic8ie5mUx48yBuI77l_y_4o1gSVOzDyO0"},
+		Query:  map[string]string{"token": "xxxx"},
 	}
 	c, err := socketioclient.Dial(
 		url,
