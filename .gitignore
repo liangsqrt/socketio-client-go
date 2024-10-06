@@ -15,7 +15,8 @@ vendor/
 go.work
 
 # Go module files
-go.mod
+# go.mod
+go.sum
 
 # IDE and editor directories and files
 .idea/
