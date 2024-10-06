@@ -1,10 +1,11 @@
 package test
 
 import (
-	socketioclient "socketio-client-go"
-	"socketio-client-go/transport"
 	"testing"
 	"time"
+
+	socketioclient "github.com/liangsqrt/socketio-client-go"
+	"github.com/liangsqrt/socketio-client-go/transport"
 )
 
 func TestClient(t *testing.T) {
@@ -12,7 +13,7 @@ func TestClient(t *testing.T) {
 		Host:   "127.0.0.1",
 		Port:   8080,
 		Secure: false,
-		Query:  map[string]string{"token": "xxxx"},
+		Query:  map[string]string{"token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzMwNTgwMDIxLCJpYXQiOjE3Mjc5ODgwMjEsImp0aSI6IjU3OGE3NDg1YmRmZjRkYjliNDY1ZjgwNjA1YTAxMTM0IiwidXNlcl9pZCI6Mn0.VvQiyh4fYdic8ie5mUx48yBuI77l_y_4o1gSVOzDyO0"},
 	}
 	c, err := socketioclient.Dial(
 		url,
@@ -22,6 +23,9 @@ func TestClient(t *testing.T) {
 		},
 		true,
 	)
+	if err != nil {
+		panic(err.Error())
+	}
 	c.On("node_traffic_usage", func(c *socketioclient.Channel, args []interface{}) error {
 		if len(args) > 0 {
 			print(args)

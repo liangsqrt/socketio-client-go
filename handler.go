@@ -2,10 +2,11 @@ package socketioclient
 
 import (
 	"reflect"
-	"socketio-client-go/logger"
-	"socketio-client-go/protocol"
 	"sync"
 	"time"
+
+	"github.com/liangsqrt/socketio-client-go/logger"
+	"github.com/liangsqrt/socketio-client-go/protocol"
 )
 
 const (

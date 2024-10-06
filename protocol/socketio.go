@@ -3,9 +3,8 @@ package protocol
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
+	"log"
 	"regexp"
-	"socketio-client-go/logger"
 	"strconv"
 )
 
@@ -65,40 +64,6 @@ func GetSocketMessageType(data string) (SocketMessageType, error) {
 	return SocketMessageType(msgType), nil
 }
 
-func GetSocketIoEmitName(data string) string {
-	re := regexp.MustCompile(`\d{1,2}(/[^,]*),(.+)`)
-	matches := re.FindStringSubmatch(data)
-	if len(matches) == 4 {
-		namespace := matches[1]
-		jsonData := matches[2]
-
-		// 解析JSON数据
-		var result []interface{}
-		if err := json.Unmarshal([]byte(jsonData), &result); err != nil {
-			fmt.Println("JSON解析错误:", err)
-			return data
-		}
-
-		eventName := result[0].(string)
-		payload := result[1].(map[string]interface{})
-
-		fmt.Println("Namespace:", namespace)
-		fmt.Println("Event Name:", eventName)
-		fmt.Println("Payload:", payload)
-	} else {
-		fmt.Println("数据格式不匹配")
-	}
-
-	jsonevent := data[2:]
-	var emit []interface{}
-	err := json.Unmarshal([]byte(jsonevent), &emit)
-	if err != nil {
-		logger.LogErrorSocketIo("Error: " + err.Error())
-	}
-	emitNameString, _ := emit[0].(string)
-	return emitNameString
-}
-
 func GetSocketIoMessage(data string) (*Message, error) {
 	re := regexp.MustCompile(`(\d{1,2})/([^,]*),(.+)`)
 	matches := re.FindStringSubmatch(data)
@@ -119,7 +84,7 @@ func GetSocketIoMessage(data string) (*Message, error) {
 		// 解析JSON数据
 		var result []interface{}
 		if err := json.Unmarshal([]byte(jsonData), &result); err != nil {
-			fmt.Println("JSON parse error:", err)
+			log.Fatalln("JSON parse error:", err)
 			return nil, err
 		}
 
@@ -131,19 +96,17 @@ func GetSocketIoMessage(data string) (*Message, error) {
 		case map[string]interface{}:
 			payload = result[1].(map[string]interface{})
 		default:
-			fmt.Println("unknown type")
+			log.Fatalln("unknown type")
 			return nil, errors.New("unknown type")
 		}
 
-		fmt.Println("Namespace:", namespace)
-		fmt.Println("Event Name:", eventName)
-		fmt.Println("Payload:", payload)
 		return &Message{
 			EngineIoType: EngineMessageTypeMessage,
 			SocketType:   SocketMessageTypeEvent,
 			SocketEvent: SocketEvent{
 				EventName:    eventName,
 				EventContent: payload,
+				NS:           namespace,
 			},
 		}, nil
 	} else {

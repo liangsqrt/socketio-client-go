@@ -10,11 +10,12 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
-	"socketio-client-go/transport"
 	"strconv"
 	"strings"
 	"syscall"
 	"time"
+
+	"github.com/liangsqrt/socketio-client-go/transport"
 )
 
 const (
@@ -141,7 +142,6 @@ func (c *Client) handshake(socketUrl SocketIoUrl) error {
 
 	// remove the first '0' character
 	bodyStr := string(body)[1:]
-
 	// parse the string to json
 	if err := json.Unmarshal([]byte(bodyStr), &result); err != nil {
 		return err
@@ -161,6 +161,14 @@ func (c *Client) handshake(socketUrl SocketIoUrl) error {
 	if err != nil {
 		return err
 	}
+	// body, err = io.ReadAll(resp.Body)
+	// if err != nil {
+	// 	return err
+	// }
+	// if err := json.Unmarshal([]byte(body), &result); err != nil {
+	// 	return err
+	// }
+	// print(result)
 	defer resp.Body.Close()
 
 	// third req：send the websocket upgrade request
@@ -174,6 +182,17 @@ func (c *Client) handshake(socketUrl SocketIoUrl) error {
 		return err
 	}
 	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		return errors.New("failed to upgrade to websocket")
+	}
+	body, err = io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+	bodyStr = string(body)
+	if strings.Index(bodyStr, "40") != 0 {
+		return errors.New("failed to handshake, check your auth info")
+	}
 	err = c.initNamespace(sid)
 	if err != nil {
 		return err

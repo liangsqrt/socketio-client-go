@@ -3,7 +3,8 @@ package socketioclient
 import (
 	"errors"
 	"log"
-	"socketio-client-go/protocol"
+
+	"github.com/liangsqrt/socketio-client-go/protocol"
 )
 
 var (
