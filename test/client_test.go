@@ -27,6 +27,7 @@ func TestClient(t *testing.T) {
 		panic(err.Error())
 	}
 	c.On("node_traffic_usage", func(c *socketioclient.Channel, args []interface{}) error {
+		// you must make sure the callback function has the same number structure of arguments
 		if len(args) > 0 {
 			print(args)
 		} else {
