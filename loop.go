@@ -3,7 +3,6 @@ package socketioclient
 import (
 	"encoding/json"
 	"errors"
-	"github.com/liangsqrt/socketio-client-go/logger"
 	"github.com/liangsqrt/socketio-client-go/protocol"
 	"github.com/liangsqrt/socketio-client-go/transport"
 	"log"
@@ -19,6 +18,9 @@ const (
 
 var (
 	ErrorWrongHeader = errors.New("Wrong header")
+	ReconnectChan    = make(chan int, 10)
+	ReconnectCnt     = 10
+	ReconnectCntLock = sync.Mutex{}
 )
 
 /*
@@ -132,17 +134,28 @@ func inLoop(c *Channel, m *methods) error {
 	for {
 		pkg, err := c.conn.GetMessage()
 		if err != nil {
-			return closeChannel(c, m, err)
+			ReconnectCntLock.Lock()
+			if ReconnectCnt > 0 {
+				ReconnectCnt -= 1
+				ReconnectChan <- ReconnectCnt
+			} else {
+				return closeChannel(c, m, err)
+			}
+			ReconnectCntLock.Unlock()
+			return nil
 		}
 		engineIoType, err := protocol.GetEngineMessageType(pkg)
-		logger.LogDebugSocketIo("Engine IO type: " + engineIoType.String())
+		//logger.LogDebugSocketIo("Engine IO type: " + engineIoType.String())
 		if err != nil {
-			closeChannel(c, m, protocol.ErrorWrongPacket)
+			err := closeChannel(c, m, protocol.ErrorWrongPacket)
+			if err != nil {
+				return err
+			}
 			return err
 		}
 		go m.processIncomingMessage(c, engineIoType, pkg)
-
 	}
+
 }
 
 var overflooded sync.Map
@@ -174,8 +187,16 @@ func outLoop(c *Channel, m *methods) error {
 
 		err := c.conn.WriteMessage(msg)
 		if err != nil {
-			return closeChannel(c, m, err)
+			ReconnectCntLock.Lock()
+			if ReconnectCnt > 0 {
+				ReconnectCnt -= 1
+				ReconnectChan <- ReconnectCnt
+			} else {
+				return closeChannel(c, m, err)
+			}
+			ReconnectCntLock.Unlock()
 		}
+
 	}
 }
 

@@ -5,7 +5,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/liangsqrt/socketio-client-go/logger"
 	"github.com/liangsqrt/socketio-client-go/protocol"
 )
 
@@ -38,7 +37,6 @@ type methods struct {
 create messageHandlers map
 */
 func (m *methods) initMethods() {
-	//m.messageHandlers = make(sync.Map)
 	m.messageHandlers = sync.Map{}
 
 }
@@ -95,7 +93,7 @@ func (m *methods) processSocketMessage(c *Channel, pkg string) {
 	if err != nil {
 		return
 	}
-	logger.LogDebugSocketIo("Socket IO type: (" + socketType.String())
+	//logger.LogDebugSocketIo("Socket IO type: (" + socketType.String())
 	if socketType == protocol.SocketMessageTypeEvent { //Decode socket.io message type
 		msg, err := protocol.GetSocketIoMessage(pkg)
 		if err != nil {

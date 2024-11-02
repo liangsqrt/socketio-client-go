@@ -95,6 +95,8 @@ func GetSocketIoMessage(data string) (*Message, error) {
 			payload = result[1].(string)
 		case map[string]interface{}:
 			payload = result[1].(map[string]interface{})
+		case []interface{}:
+			payload = result[1].([]interface{})
 		default:
 			log.Fatalln("unknown type")
 			return nil, errors.New("unknown type")

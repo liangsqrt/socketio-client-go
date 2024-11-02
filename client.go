@@ -8,11 +8,8 @@ import (
 	"net"
 	"net/http"
 	"net/url"
-	"os"
-	"os/signal"
 	"strconv"
 	"strings"
-	"syscall"
 	"time"
 
 	"github.com/liangsqrt/socketio-client-go/transport"
@@ -32,9 +29,11 @@ type Client struct {
 	*Namespace
 	methods
 	Channel
+	Conf ConConf
+	Tr   transport.Transport
 }
 
-type SocketIoUrl struct {
+type ConConf struct {
 	Host   string
 	Port   int
 	Secure bool
@@ -43,9 +42,9 @@ type SocketIoUrl struct {
 
 /*
 *
-Generate websocket URL from SocketIoUrl
+Generate websocket URL from ConConf
 */
-func (s *SocketIoUrl) GenerateWebSocketUrl(sid string) string {
+func (s *ConConf) GenerateWebSocketUrl(sid string) string {
 	var protocol string
 	if s.Secure {
 		protocol = webSocketSecureProtocol
@@ -66,9 +65,9 @@ func (s *SocketIoUrl) GenerateWebSocketUrl(sid string) string {
 
 /*
 *
-Generate handshake URL from SocketIoUrl
+Generate handshake URL from ConConf
 */
-func (s *SocketIoUrl) GenerateHandshakeUrl() string {
+func (s *ConConf) GenerateHandshakeUrl() string {
 	var protocol string
 	if s.Secure {
 		protocol = "https://"
@@ -89,7 +88,7 @@ func (s *SocketIoUrl) GenerateHandshakeUrl() string {
 *
 Get ws/wss url by host and port
 */
-func GetUrl(socketUrl SocketIoUrl) string {
+func GetUrl(socketUrl ConConf) string {
 
 	var prefix string
 	if socketUrl.Secure {
@@ -124,8 +123,8 @@ func (c *Client) initNamespace(sid string) error {
 	return nil
 }
 
-func (c *Client) handshake(socketUrl SocketIoUrl) error {
-	url := socketUrl.GenerateHandshakeUrl()
+func (c *Client) handshake() error {
+	url := c.Conf.GenerateHandshakeUrl()
 	// frist req：get the sid
 	resp, err := http.Get(url)
 	if err != nil {
@@ -191,7 +190,7 @@ func (c *Client) handshake(socketUrl SocketIoUrl) error {
 	}
 	bodyStr = string(body)
 	if strings.Index(bodyStr, "40") != 0 {
-		return errors.New("failed to handshake, check your auth info")
+		return errors.New("failed to handshake, check your auth or namespace")
 	}
 	err = c.initNamespace(sid)
 	if err != nil {
@@ -204,49 +203,60 @@ func (c *Client) handshake(socketUrl SocketIoUrl) error {
 // The correct ws protocol url example:
 // ws://localhost:8080/socket.io/?EIO=3&transport=websocket&sid=xxxx
 // /*
-func Dial(url SocketIoUrl, tr transport.Transport, ns *Namespace, gracefulExit bool) (*Client, error) {
-	c := &Client{}
-	c.Namespace = ns
-	c.initChannel()
-	c.initMethods()
-	if err := c.handshake(url); err != nil {
-		log.Fatalln("handshake failed", err)
-		return nil, err
-	}
-
-	var err error
-	wsUrl := url.GenerateWebSocketUrl(c.Namespace.Sid)
-	c.conn, err = tr.Connect(wsUrl)
+func Dial(conConf ConConf, tr transport.Transport, ns *Namespace) (*Client, error) {
+	c := &Client{Conf: conConf, Tr: tr}
+	err := c.HandShake(ns)
 	if err != nil {
 		return nil, err
 	}
-	handleUpgrade(&c.Channel, &c.methods)
+	err = c.Connect()
+	if err != nil {
+		return nil, err
+	}
+
+	go func() {
+		for {
+			cnt := <-ReconnectChan
+			if cnt > 0 {
+				err := c.Connect()
+				if err == nil {
+					ReconnectCntLock.Lock()
+					ReconnectCnt = 10
+					ReconnectCntLock.Unlock()
+				}
+			}
+		}
+	}()
+	return c, nil
+}
+
+func (c *Client) HandShake(ns *Namespace) error {
+	c.Namespace = ns
+	c.initChannel()
+	c.initMethods()
+	if err := c.handshake(); err != nil {
+		log.Fatalln("handshake failed", err)
+		return err
+	}
+	return nil
+}
+
+func (c *Client) Connect() error {
+	wsUrl := c.Conf.GenerateWebSocketUrl(c.Namespace.Sid)
+	var err error
+	c.conn, err = c.Tr.Connect(wsUrl)
+	if err != nil {
+		return err
+	}
+	err = handleUpgrade(&c.Channel, &c.methods)
+	if err != nil {
+		return err
+	}
 
 	go inLoop(&c.Channel, &c.methods)
 	go outLoop(&c.Channel, &c.methods)
 	go pinger(&c.Channel)
-
-	if gracefulExit {
-		// graceful exit method
-		cleanup := func() {
-			err := c.Emit("disconnect", nil)
-			if err != nil {
-				log.Println("Failed to send disconnect signal:", err)
-			}
-			c.Close()
-		}
-
-		// catch program exit signal
-		sigChan := make(chan os.Signal, 1)
-		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
-		go func() {
-			<-sigChan
-			cleanup()
-			os.Exit(0)
-		}()
-	}
-
-	return c, nil
+	return nil
 }
 
 /*
