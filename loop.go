@@ -3,13 +3,14 @@ package socketioclient
 import (
 	"encoding/json"
 	"errors"
-	"github.com/liangsqrt/socketio-client-go/protocol"
-	"github.com/liangsqrt/socketio-client-go/transport"
 	"log"
 	"net/http"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/liangsqrt/socketio-client-go/protocol"
+	"github.com/liangsqrt/socketio-client-go/transport"
 )
 
 const (
@@ -134,24 +135,12 @@ func inLoop(c *Channel, m *methods) error {
 	for {
 		pkg, err := c.conn.GetMessage()
 		if err != nil {
-			ReconnectCntLock.Lock()
-			if ReconnectCnt > 0 {
-				ReconnectCnt -= 1
-				ReconnectChan <- ReconnectCnt
-			} else {
-				return closeChannel(c, m, err)
-			}
-			ReconnectCntLock.Unlock()
-			return nil
+			return closeChannel(c, m, err)
 		}
 		engineIoType, err := protocol.GetEngineMessageType(pkg)
-		//logger.LogDebugSocketIo("Engine IO type: " + engineIoType.String())
+		// log.Println("Engine IO type: " + engineIoType.String())
 		if err != nil {
-			err := closeChannel(c, m, protocol.ErrorWrongPacket)
-			if err != nil {
-				return err
-			}
-			return err
+			return closeChannel(c, m, protocol.ErrorWrongPacket)
 		}
 		go m.processIncomingMessage(c, engineIoType, pkg)
 	}
@@ -187,14 +176,7 @@ func outLoop(c *Channel, m *methods) error {
 
 		err := c.conn.WriteMessage(msg)
 		if err != nil {
-			ReconnectCntLock.Lock()
-			if ReconnectCnt > 0 {
-				ReconnectCnt -= 1
-				ReconnectChan <- ReconnectCnt
-			} else {
-				return closeChannel(c, m, err)
-			}
-			ReconnectCntLock.Unlock()
+			return closeChannel(c, m, err)
 		}
 
 	}

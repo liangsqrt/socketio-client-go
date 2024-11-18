@@ -77,7 +77,7 @@ func main() {
 ```
     
 TODO:
-- [ ] Add automatic reconnection mechanism
+- [x] Add automatic reconnection mechanism
 - [ ] Add socket.io communication that does not rely on WebSocket, such as HTTP-based communication
-- [ ] Testing
-- [ ] Support multiple namespaces simultaneously
+- [x] Testing
+- [ ] Handle the message lost when reconnecting

@@ -1,7 +1,6 @@
 package test
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
@@ -11,16 +10,19 @@ import (
 
 func TestClient(t *testing.T) {
 	url := socketioclient.ConConf{
-		Host:   "wsio.anydoor.world",
-		Port:   80,
+		Host:   "127.0.0.1",
+		Port:   32093,
 		Secure: false,
-		Query:  map[string]string{"token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzMwNTgwMDIxLCJpYXQiOjE3Mjc5ODgwMjEsImp0aSI6IjU3OGE3NDg1YmRmZjRkYjliNDY1ZjgwNjA1YTAxMTM0IiwidXNlcl9pZCI6Mn0.VvQiyh4fYdic8ie5mUx48yBuI77l_y_4o1gSVOzDyO0"},
+		Query:  map[string]string{"token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzM0NTA5NTI2LCJpYXQiOjE3MzE5MTc1MjYsImp0aSI6ImE4MTM4YjEwMDcyNjQzNDA4MjY3N2FlMWI2M2Q3MTY1IiwidXNlcl9pZCI6Mn0.YBGG702SDjAOjwKZp-20sQyFsc0ZX_5GcLfyx3xYIvo"},
 	}
+	defaultTransport := transport.GetDefaultWebsocketTransport()
+	defaultTransport.SetUnsecureTLS(true)
+
 	c, err := socketioclient.Dial(
 		url,
-		transport.GetDefaultWebsocketTransport(),
+		defaultTransport,
 		&socketioclient.Namespace{
-			Namespace: "statistic",
+			Namespace: "proxy",
 		},
 	)
 	if err != nil {
@@ -47,7 +49,7 @@ func TestClient(t *testing.T) {
 	}
 	for i := 0; i < 100; i++ {
 		err = c.Emit("node_traffic_usage", payload)
-		fmt.Printf("err is %v\n", err)
+		// fmt.Printf("err is %v\n", err)
 		time.Sleep(time.Second * 2)
 	}
 

@@ -37,6 +37,11 @@ Connection factory for given transport
 */
 type Transport interface {
 	/**
+	Handshake with server
+	*/
+	Handshake(url string, namespace string) (sid string, err error)
+
+	/**
 	Get client connection
 	*/
 	Connect(url string) (conn Connection, err error)

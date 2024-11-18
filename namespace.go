@@ -11,17 +11,17 @@ type Namespace struct {
 	mu        sync.Mutex
 }
 
-func (n *Namespace) IsInit() bool {
-	n.mu.Lock()
-	defer n.mu.Unlock()
-	return n.isInit
-}
+// func (n *Namespace) IsInit() bool {
+// 	n.mu.Lock()
+// 	defer n.mu.Unlock()
+// 	return n.isInit
+// }
 
-func (n *Namespace) SetInit(init bool) {
-	n.mu.Lock()
-	defer n.mu.Unlock()
-	n.isInit = init
-}
+// func (n *Namespace) SetInit(init bool) {
+// 	n.mu.Lock()
+// 	defer n.mu.Unlock()
+// 	n.isInit = init
+// }
 
 func (n *Namespace) GetNamespace() string {
 	return n.Namespace
