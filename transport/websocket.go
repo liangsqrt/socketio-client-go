@@ -113,7 +113,10 @@ func (wsc *WebsocketConnection) WriteMessage(message string) error {
 }
 
 func (wsc *WebsocketConnection) Close() {
-	wsc.socket.Close()
+	err := wsc.socket.Close()
+	if err != nil {
+		log.Println("Failed to close websocket connection:", err)
+	}
 }
 
 func (wsc *WebsocketConnection) PingParams() (interval, timeout time.Duration) {
