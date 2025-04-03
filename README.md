@@ -3,12 +3,16 @@
 
 This project is a Go-based implementation of a Socket.IO client. It provides functionalities to connect to a Socket.IO server, handle events, and manage the connection lifecycle.
 
+# Notice
+
+- _Notice_: i just found this still not handle graceful disconnection, and i am not going to fix it,case busy in job.
+- Bug if you have no any framework to use, you can use this.it still works well.
+
 ## Features
 
 - Connect to a Socket.IO server using WebSocket transport.
 - Emit events to the server.
 - Listen for events from the server.
-- Handle graceful disconnection.
 - Automatic ping to keep the connection alive.
 
 ## Installation
